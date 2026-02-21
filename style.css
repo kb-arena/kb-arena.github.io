@@ -80,3 +80,44 @@ button:hover {
     text-align: left;
     color: #0af;
 }
+
+/* ===== Global Input Style ===== */
+input[type="text"],
+input[type="password"],
+input[type="number"] {
+    width: 260px;
+    max-width: 85%;
+    padding: 14px 18px;
+    font-size: 1.05rem;
+    text-align: center;
+
+    background: #0f0f0f;
+    color: #ffffff;
+
+    border-radius: 12px;
+    border: 2px solid #0af;
+    outline: none;
+
+    margin-top: 10px;
+    margin-bottom: 18px;
+
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+}
+
+/* placeholder text */
+input::placeholder {
+    color: #8a8a8a;
+    letter-spacing: 1px;
+}
+
+/* focus glow */
+input:focus {
+    border-color: #4fd1ff;
+    box-shadow: 0 0 12px rgba(0,170,255,0.9);
+    transform: scale(1.02);
+}
+
+/* typing (active press) */
+input:active {
+    transform: scale(0.99);
+}
