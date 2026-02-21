@@ -81,29 +81,37 @@ button:hover {
     color: #0af;
 }
 
-/* ===== Menu Buttons Only ===== */
+/* ===== Menu Buttons with Image Background ===== */
 .menu-button {
-    padding: 15px 40px;
-    font-size: 1.1rem;
+    width: 260px;
+    height: 70px;
+
+    background-image: url("menubutton.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%; /* stretches to fit button */
+
     border: none;
-    border-radius: 12px;
     cursor: pointer;
 
-    background: linear-gradient(180deg, #1ec8ff, #0099ff);
-    color: #001018;
+    color: white;
+    font-size: 1.2rem;
     font-weight: bold;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 
-    transition: transform 0.1s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: transform 0.1s ease, filter 0.15s ease;
 }
 
 .menu-button:hover {
-    transform: translateY(-2px) scale(1.04);
-    box-shadow: 0 8px 20px rgba(0,170,255,0.5);
-    filter: brightness(1.05);
+    transform: scale(1.05);
+    filter: brightness(1.1);
 }
 
 .menu-button:active {
-    transform: translateY(1px) scale(0.98);
-    box-shadow: 0 3px 8px rgba(0,170,255,0.3) inset;
+    transform: scale(0.97);
+    filter: brightness(0.9);
 }
