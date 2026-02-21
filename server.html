@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Instance</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+    <div class="menu-container">
+        <h2>Server Running</h2>
+        <div id="player-list-container">
+            <ul id="player-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const joinCode = urlParams.get('code') || 'defaultserver';
+
+        const peer = new Peer(joinCode, {
+            host: '0.peerjs.com',  // or your own PeerJS server
+            port: 443,
+            path: '/'
+        });
+
+        const clients = [];
+        const playerNames = [];
+
+        const playerListEl = document.getElementById('player-list');
+
+        function updatePlayerList() {
+            playerListEl.innerHTML = playerNames.map(name => `<li>${name}</li>`).join('');
+        }
+
+        peer.on('open', id => {
+            console.log('Server Peer ID:', id);
+        });
+
+        peer.on('connection', conn => {
+            conn.on('data', data => {
+                if(data.name && !playerNames.includes(data.name)) {
+                    clients.push(conn);
+                    playerNames.push(data.name);
+                    updatePlayerList();
+                }
+            });
+
+            conn.on('close', () => {
+                const index = clients.indexOf(conn);
+                if(index !== -1) {
+                    clients.splice(index, 1);
+                    playerNames.splice(index, 1);
+                    updatePlayerList();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
