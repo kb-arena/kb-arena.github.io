@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Arena</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+    <div class="menu-container">
+        <h2>Your Host Lobby</h2>
+        <button id="start-server">Start Server</button>
+        <p id="join-code" style="margin-top:20px;">Join Code: <span id="code-display">---</span></p>
+    </div>
+
+    <script>
+        function generateJoinCode(length = 6) {
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            let code = '';
+            for (let i = 0; i < length; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        const startBtn = document.getElementById('start-server');
+        const codeDisplay = document.getElementById('code-display');
+
+        startBtn.addEventListener('click', () => {
+            const code = generateJoinCode();
+            codeDisplay.textContent = code;
+            // open the server instance in a new tab with the join code
+            window.open(`server.html?code=${code}`, '_blank');
+        });
+    </script>
+</body>
+</html>
