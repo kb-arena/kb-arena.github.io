@@ -9,40 +9,55 @@
 </head>
 <body>
     <div class="menu-container">
-        <input type="text" id="join-code-input" placeholder="Enter Join Code">
-        <input type="text" id="display-name" placeholder="Display Name">
+        <input type="text" id="join-code-input" class="join-code-input" placeholder="Enter Join Code">
         <button id="join-btn">Join Arena</button>
-        <p id="status" style="margin-top:20px;"></p>
+        <p id="status"></p>
     </div>
 
     <script>
-        const joinBtn = document.getElementById('join-btn');
-        const codeInput = document.getElementById('join-code-input');
-        const displayNameInput = document.getElementById('display-name');
-        const statusText = document.getElementById('status');
+        const joinBtn = document.getElementById("join-btn");
+        const codeInput = document.getElementById("join-code-input");
+        const statusText = document.getElementById("status");
 
-        joinBtn.addEventListener('click', () => {
-            const joinCode = codeInput.value.trim();
-            const displayName = displayNameInput.value.trim() || 'Guest';
+        joinBtn.addEventListener("click", () => {
+            const joinCode = codeInput.value.trim().toLowerCase();
+            if (!joinCode) {
+                statusText.textContent = "Enter a code.";
+                return;
+            }
 
-            if(!joinCode) return alert('Enter a join code!');
+            // get saved display name from index page
+            let displayName = localStorage.getItem("kb_display_name");
+            if (!displayName || displayName.trim() === "") {
+                displayName = "Guest";
+            }
 
-            const peer = new Peer(); // client peer
-            const conn = peer.connect(joinCode);
+            const peer = new Peer();
 
-            conn.on('open', () => {
-                statusText.textContent = 'Connected! Welcome, ' + displayName;
-                conn.send({name: displayName, msg: 'joined'});
-                // redirect to client arena page or start game logic
+            peer.on("open", () => {
+                const conn = peer.connect(joinCode);
+
+                conn.on("open", () => {
+                    statusText.textContent = "Connected!";
+                    
+                    // send name to server
+                    conn.send({
+                        type: "join",
+                        name: displayName
+                    });
+                });
+
+                conn.on("data", data => {
+                    console.log("Server:", data);
+                });
+
+                conn.on("error", () => {
+                    statusText.textContent = "Server not found.";
+                });
             });
 
-            conn.on('data', data => {
-                console.log('From server:', data);
-            });
-
-            conn.on('error', err => {
-                console.error(err);
-                statusText.textContent = 'Failed to connect.';
+            peer.on("error", () => {
+                statusText.textContent = "Connection failed.";
             });
         });
     </script>
