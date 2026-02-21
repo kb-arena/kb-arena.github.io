@@ -81,43 +81,29 @@ button:hover {
     color: #0af;
 }
 
-/* ===== Global Input Style ===== */
-input[type="text"],
-input[type="password"],
-input[type="number"] {
-    width: 260px;
-    max-width: 85%;
-    padding: 14px 18px;
-    font-size: 1.05rem;
-    text-align: center;
-
-    background: #0f0f0f;
-    color: #ffffff;
-
+/* ===== Menu Buttons Only ===== */
+.menu-button {
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    border: none;
     border-radius: 12px;
-    border: 2px solid #0af;
-    outline: none;
+    cursor: pointer;
 
-    margin-top: 10px;
-    margin-bottom: 18px;
+    background: linear-gradient(180deg, #1ec8ff, #0099ff);
+    color: #001018;
+    font-weight: bold;
+    letter-spacing: 0.5px;
 
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
-/* placeholder text */
-input::placeholder {
-    color: #8a8a8a;
-    letter-spacing: 1px;
+.menu-button:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 20px rgba(0,170,255,0.5);
+    filter: brightness(1.05);
 }
 
-/* focus glow */
-input:focus {
-    border-color: #4fd1ff;
-    box-shadow: 0 0 12px rgba(0,170,255,0.9);
-    transform: scale(1.02);
-}
-
-/* typing (active press) */
-input:active {
-    transform: scale(0.99);
+.menu-button:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 3px 8px rgba(0,170,255,0.3) inset;
 }
