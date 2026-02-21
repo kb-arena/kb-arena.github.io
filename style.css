@@ -30,22 +30,6 @@ body {
     margin-bottom: 30px;
 }
 
-button {
-    padding: 15px 40px;
-    font-size: 1.1rem;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    background-color: #0af;
-    color: #000;
-    transition: background 0.2s, transform 0.1s;
-}
-
-button:hover {
-    background-color: #08c;
-    transform: scale(1.05);
-}
-
 .display-name {
     padding: 12px 20px;
     border-radius: 8px;
