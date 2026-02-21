@@ -9,13 +9,39 @@
 <body>
     <div class="menu-container">
         <img src="title.png" alt="Knockback Arena" class="title-image">
-        
+
         <div class="buttons">
             <button id="host-btn">Host Arena</button>
             <button id="join-btn">Join Arena</button>
         </div>
 
-        <input type="text" placeholder="Display Name" class="display-name">
+        <input type="text" id="display-name" class="display-name" placeholder="Display Name">
     </div>
+
+    <script>
+        const hostBtn = document.getElementById("host-btn");
+        const joinBtn = document.getElementById("join-btn");
+        const nameBox = document.getElementById("display-name");
+
+        // Load saved name
+        const savedName = localStorage.getItem("kb_display_name");
+        if (savedName) {
+            nameBox.value = savedName;
+        }
+
+        // LIVE SAVE (every time you type)
+        nameBox.addEventListener("input", () => {
+            const name = nameBox.value.trim();
+            localStorage.setItem("kb_display_name", name);
+        });
+
+        hostBtn.addEventListener("click", () => {
+            window.location.assign("host.html");
+        });
+
+        joinBtn.addEventListener("click", () => {
+            window.location.assign("join.html");
+        });
+    </script>
 </body>
 </html>
