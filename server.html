@@ -6,56 +6,68 @@
     <title>Server Instance</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #000; color: #fff; font-family: Arial, sans-serif; }
+        h1 { font-size: 3rem; color: red; }
+    </style>
 </head>
 <body>
-    <div class="menu-container">
-        <h2>Server Running</h2>
-        <div id="player-list-container">
-            <ul id="player-list"></ul>
-        </div>
+    <div id="server-container">
+        <h2>Loading...</h2>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const joinCode = urlParams.get('code') || 'defaultserver';
+        const joinCode = urlParams.get('code') || '';
 
-        const peer = new Peer(joinCode, {
-            host: '0.peerjs.com',  // or your own PeerJS server
-            port: 443,
-            path: '/'
-        });
+        const serverContainer = document.getElementById('server-container');
 
-        const clients = [];
-        const playerNames = [];
+        if (!joinCode) {
+            serverContainer.innerHTML = '<h1>Arena not found</h1>';
+        } else {
+            // try to connect as a client to see if server exists
+            const peer = new Peer();
 
-        const playerListEl = document.getElementById('player-list');
+            let checked = false;
+            const conn = peer.connect(joinCode);
 
-        function updatePlayerList() {
-            playerListEl.innerHTML = playerNames.map(name => `<li>${name}</li>`).join('');
-        }
+            conn.on('open', () => {
+                checked = true;
+                // Server exists! Load normal server UI
+                serverContainer.innerHTML = `
+                    <h2>Server Running</h2>
+                    <div id="player-list-container">
+                        <ul id="player-list"></ul>
+                    </div>
+                `;
 
-        peer.on('open', id => {
-            console.log('Server Peer ID:', id);
-        });
+                const clients = [];
+                const playerNames = [];
+                const playerListEl = document.getElementById('player-list');
 
-        peer.on('connection', conn => {
-            conn.on('data', data => {
-                if(data.name && !playerNames.includes(data.name)) {
-                    clients.push(conn);
-                    playerNames.push(data.name);
-                    updatePlayerList();
+                function updatePlayerList() {
+                    playerListEl.innerHTML = playerNames.map(name => `<li>${name}</li>`).join('');
                 }
+
+                conn.send({ type: "join", name: localStorage.getItem("kb_display_name") || "Guest" });
+
+                conn.on('data', data => {
+                    if (data.type === "updateList") {
+                        playerNames.length = 0;
+                        playerNames.push(...data.players);
+                        updatePlayerList();
+                    }
+                });
+            });
+
+            conn.on('error', () => {
+                if (!checked) serverContainer.innerHTML = '<h1>Arena not found</h1>';
             });
 
             conn.on('close', () => {
-                const index = clients.indexOf(conn);
-                if(index !== -1) {
-                    clients.splice(index, 1);
-                    playerNames.splice(index, 1);
-                    updatePlayerList();
-                }
+                if (!checked) serverContainer.innerHTML = '<h1>Arena not found</h1>';
             });
-        });
+        }
     </script>
 </body>
 </html>
