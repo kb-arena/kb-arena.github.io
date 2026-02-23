@@ -5,73 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Join Arena</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
-    <style>
-        /* Red popup style */
-        #error-popup {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: red;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-weight: bold;
-            display: none;
-            z-index: 9999;
-        }
-    </style>
 </head>
 <body>
     <div class="menu-container">
         <input type="text" id="join-code-input" class="join-code-input" placeholder="Enter Join Code">
         <button id="join-btn">Join Arena</button>
-        <div id="error-popup">Arena not found</div>
     </div>
 
     <script>
         const joinBtn = document.getElementById("join-btn");
         const codeInput = document.getElementById("join-code-input");
-        const errorPopup = document.getElementById("error-popup");
 
         joinBtn.addEventListener("click", () => {
             const joinCode = codeInput.value.trim().toLowerCase();
             if (!joinCode) return;
-
-            // Create a Peer but DO NOT open a local ID yet
-            const peer = new Peer(undefined, { 
-                host: '0.peerjs.com',
-                port: 443,
-                path: '/'
-            });
-
-            let isValidServer = false;
-
-            // Try connecting to server code
-            const conn = peer.connect(joinCode);
-
-            conn.on('open', () => {
-                isValidServer = true;
-                // redirect to actual server page
-                window.location.href = `https://kb-arena.github.io/server.html?code=${joinCode}`;
-            });
-
-            conn.on('error', () => {
-                if (!isValidServer) showError();
-            });
-
-            conn.on('close', () => {
-                if (!isValidServer) showError();
-            });
+            // redirect to server.html with the code
+            window.location.href = `https://kb-arena.github.io/server.html?code=${joinCode}`;
         });
-
-        function showError() {
-            errorPopup.style.display = "block";
-            setTimeout(() => {
-                errorPopup.style.display = "none";
-            }, 2000);
-        }
     </script>
 </body>
 </html>
