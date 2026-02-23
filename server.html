@@ -3,10 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arena</title>
+<title>Arena Lobby</title>
 <link rel="stylesheet" href="style.css">
-
-<!-- PeerJS MUST load before our script -->
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
 
 <style>
@@ -33,83 +31,79 @@
 
 <script>
 const urlParams = new URLSearchParams(window.location.search);
-const joinCode = urlParams.get('code') || '';
+const joinCode = urlParams.get('code');
 const serverContainer = document.getElementById('server-container');
 
-if (!joinCode) {
-    serverContainer.innerHTML = '<h1>Arena not found</h1>';
-} else {
+if(!joinCode){
+    serverContainer.innerHTML = "<h1>Arena not found</h1>";
+    throw new Error("No code");
+}
 
-    // Attempt to create peer with same ID as server
-    const testPeer = new Peer(joinCode, {
-        host: '0.peerjs.com',
-        port: 443,
-        path: '/'
-    });
+// create a temporary peer to CHECK if host exists
+const testPeer = new Peer(joinCode, {
+    host:'0.peerjs.com',
+    port:443,
+    path:'/'
+});
 
-    // If this succeeds -> nobody owns the code -> no arena exists
-    testPeer.on('open', id => {
-        serverContainer.innerHTML = '<h1>Arena not found</h1>';
-        testPeer.destroy();
-    });
+testPeer.on('open', ()=>{
+    // we successfully created the ID -> no host owns it
+    serverContainer.innerHTML = "<h1>Arena not found</h1>";
+    testPeer.destroy();
+});
 
-    // If this errors with unavailable-id -> server IS running
-    testPeer.on('error', err => {
+testPeer.on('error', err=>{
+    // unavailable-id means the host already owns it
+    if(err.type === 'unavailable-id'){
+        connectToHost();
+    }else{
+        serverContainer.innerHTML = "<h1>Arena not found</h1>";
+    }
+});
 
-        if (err.type === 'unavailable-id') {
-            startClient();
-        } else {
-            serverContainer.innerHTML = '<h1>Arena not found</h1>';
-        }
+function connectToHost(){
 
-    });
+    const clientPeer = new Peer();
 
-    function startClient(){
+    clientPeer.on('open', ()=>{
 
-        const clientPeer = new Peer();
+        const conn = clientPeer.connect(joinCode);
 
-        clientPeer.on('open', () => {
+        conn.on('open', ()=>{
 
-            const conn = clientPeer.connect(joinCode);
+            // load lobby UI
+            serverContainer.innerHTML = `
+                <h2>Arena Lobby</h2>
+                <div id="player-list-container">
+                    <ul id="player-list"></ul>
+                </div>
+            `;
 
-            conn.on('open', () => {
+            const playerListEl = document.getElementById("player-list");
+            const displayName = localStorage.getItem("kb_display_name") || "Guest";
 
-                // Load normal lobby UI
-                serverContainer.innerHTML = `
-                    <h2>Server Running</h2>
-                    <div id="player-list-container">
-                        <ul id="player-list"></ul>
-                    </div>
-                `;
+            // tell server we joined
+            conn.send({type:"join", name:displayName});
 
-                const playerListEl = document.getElementById('player-list');
-
-                const displayName =
-                    localStorage.getItem("kb_display_name") || "Guest";
-
-                // tell server we joined
-                conn.send({ type:"join", name:displayName });
-
-                // receive player list updates
-                conn.on('data', data => {
-                    if(data.type === "updateList"){
-                        playerListEl.innerHTML =
-                            data.players.map(n=>`<li>${n}</li>`).join('');
-                    }
-                });
-
-                conn.on('close', () => {
-                    serverContainer.innerHTML = '<h1>Arena closed</h1>';
-                });
-
+            // receive player updates
+            conn.on('data', data=>{
+                if(data.type==="updateList"){
+                    playerListEl.innerHTML =
+                        data.players.map(p=>`<li>${p}</li>`).join('');
+                }
             });
 
-            conn.on('error', () => {
-                serverContainer.innerHTML = '<h1>Arena not found</h1>';
+            conn.on('close', ()=>{
+                serverContainer.innerHTML="<h1>Arena closed</h1>";
             });
 
         });
-    }
+
+        conn.on('error', ()=>{
+            serverContainer.innerHTML="<h1>Arena not found</h1>";
+        });
+
+    });
 }
 </script>
 
