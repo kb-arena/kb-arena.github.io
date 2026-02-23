@@ -1,3 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arena</title>
+<link rel="stylesheet" href="style.css">
+
+<!-- PeerJS MUST load before our script -->
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+
+<style>
+#server-container{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    flex-direction:column;
+    text-align:center;
+}
+#server-container h1{
+    color:red;
+    font-size:48px;
+}
+</style>
+</head>
+
+<body>
+
 <div id="server-container">
     <h2>Connecting to Arena...</h2>
 </div>
@@ -10,54 +39,79 @@ const serverContainer = document.getElementById('server-container');
 if (!joinCode) {
     serverContainer.innerHTML = '<h1>Arena not found</h1>';
 } else {
-    const peer = new Peer();
-    let serverExists = false;
 
-    const conn = peer.connect(joinCode);
+    // Attempt to create peer with same ID as server
+    const testPeer = new Peer(joinCode, {
+        host: '0.peerjs.com',
+        port: 443,
+        path: '/'
+    });
 
-    // If connection opens, server exists
-    conn.on('open', () => {
-        serverExists = true;
+    // If this succeeds -> nobody owns the code -> no arena exists
+    testPeer.on('open', id => {
+        serverContainer.innerHTML = '<h1>Arena not found</h1>';
+        testPeer.destroy();
+    });
 
-        serverContainer.innerHTML = `
-            <h2>Server Running</h2>
-            <div id="player-list-container">
-                <ul id="player-list"></ul>
-            </div>
-        `;
+    // If this errors with unavailable-id -> server IS running
+    testPeer.on('error', err => {
 
-        const playerListEl = document.getElementById('player-list');
-        const playerNames = [];
-        function updatePlayerList() {
-            playerListEl.innerHTML = playerNames.map(name => `<li>${name}</li>`).join('');
+        if (err.type === 'unavailable-id') {
+            startClient();
+        } else {
+            serverContainer.innerHTML = '<h1>Arena not found</h1>';
         }
 
-        // send name to server
-        const displayName = localStorage.getItem("kb_display_name") || "Guest";
-        conn.send({ type: "join", name: displayName });
+    });
 
-        conn.on('data', data => {
-            if (data.type === "updateList") {
-                playerNames.length = 0;
-                playerNames.push(...data.players);
-                updatePlayerList();
-            }
+    function startClient(){
+
+        const clientPeer = new Peer();
+
+        clientPeer.on('open', () => {
+
+            const conn = clientPeer.connect(joinCode);
+
+            conn.on('open', () => {
+
+                // Load normal lobby UI
+                serverContainer.innerHTML = `
+                    <h2>Server Running</h2>
+                    <div id="player-list-container">
+                        <ul id="player-list"></ul>
+                    </div>
+                `;
+
+                const playerListEl = document.getElementById('player-list');
+
+                const displayName =
+                    localStorage.getItem("kb_display_name") || "Guest";
+
+                // tell server we joined
+                conn.send({ type:"join", name:displayName });
+
+                // receive player list updates
+                conn.on('data', data => {
+                    if(data.type === "updateList"){
+                        playerListEl.innerHTML =
+                            data.players.map(n=>`<li>${n}</li>`).join('');
+                    }
+                });
+
+                conn.on('close', () => {
+                    serverContainer.innerHTML = '<h1>Arena closed</h1>';
+                });
+
+            });
+
+            conn.on('error', () => {
+                serverContainer.innerHTML = '<h1>Arena not found</h1>';
+            });
+
         });
-    });
-
-    conn.on('close', () => {
-        if (!serverExists) showNotFound();
-    });
-    conn.on('error', () => {
-        if (!serverExists) showNotFound();
-    });
-
-    // Safe timeout for slow connections
-    setTimeout(() => {
-        if (!serverExists) showNotFound();
-    }, 5000); // 5 seconds
-
-    function showNotFound() {
-        serverContainer.innerHTML = '<h1>Arena not found</h1>';
     }
+}
 </script>
+
+</body>
+</html>
