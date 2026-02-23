@@ -1,73 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Instance</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
-    <style>
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #000; color: #fff; font-family: Arial, sans-serif; }
-        h1 { font-size: 3rem; color: red; }
-    </style>
-</head>
-<body>
-    <div id="server-container">
-        <h2>Loading...</h2>
-    </div>
+<div id="server-container">
+    <h2>Connecting to Arena...</h2>
+</div>
 
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const joinCode = urlParams.get('code') || '';
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const joinCode = urlParams.get('code') || '';
+const serverContainer = document.getElementById('server-container');
 
-        const serverContainer = document.getElementById('server-container');
+if (!joinCode) {
+    serverContainer.innerHTML = '<h1>Arena not found</h1>';
+} else {
+    const peer = new Peer();
+    let serverExists = false;
 
-        if (!joinCode) {
-            serverContainer.innerHTML = '<h1>Arena not found</h1>';
-        } else {
-            // try to connect as a client to see if server exists
-            const peer = new Peer();
+    const conn = peer.connect(joinCode);
 
-            let checked = false;
-            const conn = peer.connect(joinCode);
+    // If connection opens, server exists
+    conn.on('open', () => {
+        serverExists = true;
 
-            conn.on('open', () => {
-                checked = true;
-                // Server exists! Load normal server UI
-                serverContainer.innerHTML = `
-                    <h2>Server Running</h2>
-                    <div id="player-list-container">
-                        <ul id="player-list"></ul>
-                    </div>
-                `;
+        serverContainer.innerHTML = `
+            <h2>Server Running</h2>
+            <div id="player-list-container">
+                <ul id="player-list"></ul>
+            </div>
+        `;
 
-                const clients = [];
-                const playerNames = [];
-                const playerListEl = document.getElementById('player-list');
-
-                function updatePlayerList() {
-                    playerListEl.innerHTML = playerNames.map(name => `<li>${name}</li>`).join('');
-                }
-
-                conn.send({ type: "join", name: localStorage.getItem("kb_display_name") || "Guest" });
-
-                conn.on('data', data => {
-                    if (data.type === "updateList") {
-                        playerNames.length = 0;
-                        playerNames.push(...data.players);
-                        updatePlayerList();
-                    }
-                });
-            });
-
-            conn.on('error', () => {
-                if (!checked) serverContainer.innerHTML = '<h1>Arena not found</h1>';
-            });
-
-            conn.on('close', () => {
-                if (!checked) serverContainer.innerHTML = '<h1>Arena not found</h1>';
-            });
+        const playerListEl = document.getElementById('player-list');
+        const playerNames = [];
+        function updatePlayerList() {
+            playerListEl.innerHTML = playerNames.map(name => `<li>${name}</li>`).join('');
         }
-    </script>
-</body>
-</html>
+
+        // send name to server
+        const displayName = localStorage.getItem("kb_display_name") || "Guest";
+        conn.send({ type: "join", name: displayName });
+
+        conn.on('data', data => {
+            if (data.type === "updateList") {
+                playerNames.length = 0;
+                playerNames.push(...data.players);
+                updatePlayerList();
+            }
+        });
+    });
+
+    conn.on('close', () => {
+        if (!serverExists) showNotFound();
+    });
+    conn.on('error', () => {
+        if (!serverExists) showNotFound();
+    });
+
+    // Safe timeout for slow connections
+    setTimeout(() => {
+        if (!serverExists) showNotFound();
+    }, 5000); // 5 seconds
+
+    function showNotFound() {
+        serverContainer.innerHTML = '<h1>Arena not found</h1>';
+    }
+</script>
