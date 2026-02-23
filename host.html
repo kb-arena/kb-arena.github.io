@@ -1,38 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Host Arena</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hosting Arena</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
+
 <body>
-    <div class="menu-container">
-        <h2>Your Host Lobby</h2>
-        <button id="start-server">Start Server</button>
-        <p id="join-code" style="margin-top:20px;">Join Code: <span id="code-display">---</span></p>
-    </div>
+<div class="menu-container">
+    <h2>Starting Arena...</h2>
+    <p id="join-code" style="margin-top:20px;">Join Code: <span id="code-display">---</span></p>
+</div>
 
-    <script>
-        function generateJoinCode(length = 6) {
-            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-            let code = '';
-            for (let i = 0; i < length; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
-        }
+<script>
+function generateJoinCode(length = 6) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let code = '';
+    for (let i = 0; i < length; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
 
-        const startBtn = document.getElementById('start-server');
-        const codeDisplay = document.getElementById('code-display');
+const codeDisplay = document.getElementById('code-display');
 
-        startBtn.addEventListener('click', () => {
-            const code = generateJoinCode();
-            codeDisplay.textContent = code;
-            // open the server instance in a new tab with the join code
-            window.open(`server.html?code=${code}`, '_blank');
+startHosting();
+
+function startHosting(){
+
+    const joinCode = generateJoinCode();
+    codeDisplay.textContent = joinCode;
+
+    // ACTUAL server peer
+    const hostPeer = new Peer(joinCode, {
+        host: '0.peerjs.com',
+        port: 443,
+        path: '/'
+    });
+
+    // when peer is successfully created → server exists
+    hostPeer.on('open', id => {
+
+        // open the real server tab ONLY after it exists
+        window.open(`server.html?code=${joinCode}`, '_blank');
+
+        // listen for players
+        const clients = [];
+        const playerNames = [];
+
+        hostPeer.on('connection', conn => {
+
+            conn.on('data', data => {
+
+                if(data.type === "join"){
+                    clients.push(conn);
+                    playerNames.push(data.name);
+
+                    // broadcast updated player list
+                    clients.forEach(c => {
+                        c.send({
+                            type: "updateList",
+                            players: playerNames
+                        });
+                    });
+                }
+            });
+
+            conn.on('close', () => {
+                const i = clients.indexOf(conn);
+                if(i !== -1){
+                    clients.splice(i,1);
+                    playerNames.splice(i,1);
+
+                    clients.forEach(c => {
+                        c.send({
+                            type:"updateList",
+                            players: playerNames
+                        });
+                    });
+                }
+            });
+
         });
-    </script>
+
+    });
+
+    // extremely rare but handle duplicate code
+    hostPeer.on('error', err => {
+        if(err.type === 'unavailable-id'){
+            startHosting(); // regenerate a new code automatically
+        }
+    });
+}
+</script>
+
 </body>
 </html>
