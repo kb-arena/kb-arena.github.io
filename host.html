@@ -28,7 +28,7 @@ const codeDisplay = document.getElementById('code-display');
 
 startHosting();
 
-function startHosting(){
+function startHosting() {
 
     const joinCode = generateJoinCode();
     codeDisplay.textContent = joinCode;
@@ -40,50 +40,48 @@ function startHosting(){
         path: '/'
     });
 
-    // when peer is successfully created → server exists
+    // store clients
+    const clients = [];
+    const playerNames = [];
+
     hostPeer.on('open', id => {
-
-        // open the real server tab ONLY after it exists
+        // open the game tab after host exists
         window.open(`server.html?code=${joinCode}`, '_blank');
+    });
 
-        // listen for players
-        const clients = [];
-        const playerNames = [];
+    hostPeer.on('connection', conn => {
 
-        hostPeer.on('connection', conn => {
-
-            conn.on('data', data => {
-
-                if(data.type === "join"){
-                    clients.push(conn);
-                    playerNames.push(data.name);
-
-                    // broadcast updated player list
-                    clients.forEach(c => {
-                        c.send({
-                            type: "updateList",
-                            players: playerNames
-                        });
+        function broadcastPlayerList() {
+            clients.forEach(c => {
+                if(c.open) {
+                    c.send({
+                        type: "updateList",
+                        players: playerNames
                     });
                 }
             });
+        }
 
-            conn.on('close', () => {
-                const i = clients.indexOf(conn);
-                if(i !== -1){
-                    clients.splice(i,1);
-                    playerNames.splice(i,1);
+        function removeClient() {
+            const i = clients.indexOf(conn);
+            if(i !== -1){
+                clients.splice(i, 1);
+                playerNames.splice(i, 1);
+                broadcastPlayerList();
+            }
+        }
 
-                    clients.forEach(c => {
-                        c.send({
-                            type:"updateList",
-                            players: playerNames
-                        });
-                    });
-                }
-            });
-
+        conn.on('data', data => {
+            if(data.type === "join"){
+                clients.push(conn);
+                playerNames.push(data.name);
+                broadcastPlayerList();
+            }
         });
+
+        // handle disconnects
+        conn.on('close', removeClient);
+        conn.on('error', removeClient);
 
     });
 
@@ -91,8 +89,11 @@ function startHosting(){
     hostPeer.on('error', err => {
         if(err.type === 'unavailable-id'){
             startHosting(); // regenerate a new code automatically
+        } else {
+            console.error("Host Peer Error:", err);
         }
     });
+
 }
 </script>
 
