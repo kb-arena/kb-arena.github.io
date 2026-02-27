@@ -1,7 +1,7 @@
 /* Load Minecraft font */
 @font-face {
-    font-family: 'Minecraft';
-    src: url('Minecraft.ttf') format('truetype');
+    font-family: 'Pixel';
+    src: url('pixelfont.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
@@ -10,7 +10,7 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Minecraft', Arial, sans-serif;
+    font-family: 'Pixel', Arial, sans-serif;
     background-color: #ffffff;
     color: #fff;
     display: flex;
