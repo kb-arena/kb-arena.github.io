@@ -1,3 +1,120 @@
+/* Load Minecraft font */
+@font-face {
+    font-family: 'Minecraft';
+    src: url('Minecraft.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Body styling */
 body {
-    font-family: 'Minecraft.ttf', sans-serif;
+    margin: 0;
+    padding: 0;
+    font-family: 'Minecraft', Arial, sans-serif;
+    background-color: #ffffff;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100vh;
+}
+
+/* Make buttons and inputs inherit font */
+button, input, select, textarea {
+    font-family: inherit;
+}
+
+/* Menu container */
+.menu-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+}
+
+/* Title image */
+.title-image {
+    width: 700px;
+    max-width: 80%;
+}
+
+/* Display name input */
+.display-name {
+    padding: 12px 20px;
+    border: 5px solid black;
+    width: 250px;
+    max-width: 80%;
+    font-size: 1rem;
+    text-align: center;
+    margin-top: 50px;
+    color: white;
+    background-color: gray;
+}
+
+.display-name::placeholder {
+    color: white;
+    font-weight: bold;
+}
+
+/* Player list container */
+#player-list-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 250px;
+    max-width: 80%;
+    background-color: #1e1e1e;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+/* Player list */
+#player-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#player-list li {
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    background-color: #0a0a0a;
+    border-radius: 5px;
+    font-size: 1rem;
+    text-align: left;
+    color: #0af;
+}
+
+/* Buttons */
+#host-btn,
+#join-btn {
+    display: block;
+    width: 500px;
+    height: 70px;
+    background-image: url("menubutton.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: transform 0.1s ease, filter 0.15s ease;
+    margin-bottom: 5px;
+}
+
+#host-btn:hover,
+#join-btn:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+
+#host-btn:active,
+#join-btn:active {
+    transform: scale(0.97);
+    filter: brightness(0.9);
 }
